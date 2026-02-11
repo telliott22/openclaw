@@ -13,13 +13,13 @@ variable "ssh_public_key_path" {
 variable "server_type" {
   description = "Hetzner server type"
   type        = string
-  default     = "cx22"
+  default     = "cx23"
 }
 
 variable "location" {
   description = "Hetzner datacenter location"
   type        = string
-  default     = "fsn1"
+  default     = "nbg1"
 }
 
 variable "admin_ip_cidrs" {

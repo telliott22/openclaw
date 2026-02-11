@@ -44,7 +44,7 @@ runcmd:
         environment:
           - OPENCLAW_GATEWAY_TOKEN=${openclaw_gateway_token}
           - GOG_KEYRING_PASSWORD=${gog_keyring_password}
-        command: ["gateway", "daemon"]
+        command: ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
     COMPOSE
 
   # Start gateway
