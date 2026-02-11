@@ -1,0 +1,77 @@
+#cloud-config
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - git
+  - unattended-upgrades
+  - apt-transport-https
+  - ca-certificates
+  - curl
+
+runcmd:
+  # Install Docker
+  - curl -fsSL https://get.docker.com | sh
+
+  # Create openclaw user with docker group
+  - useradd -m -s /bin/bash -u 1000 openclaw
+  - usermod -aG docker openclaw
+
+  # Create persistent dirs
+  - mkdir -p /home/openclaw/.openclaw/workspace
+  - chown -R openclaw:openclaw /home/openclaw/.openclaw
+
+  # Clone OpenClaw
+  - git clone https://github.com/openclaw/openclaw /opt/openclaw
+
+  # Build Docker image
+  - cd /opt/openclaw && docker build -t openclaw:latest .
+
+  # Write docker-compose.yml
+  - |
+    cat > /opt/openclaw/docker-compose.yml << 'COMPOSE'
+    services:
+      openclaw-gateway:
+        image: openclaw:latest
+        container_name: openclaw-gateway
+        restart: unless-stopped
+        user: "1000:1000"
+        ports:
+          - "127.0.0.1:18789:18789"
+        volumes:
+          - /home/openclaw/.openclaw:/home/openclaw/.openclaw
+        environment:
+          - OPENCLAW_GATEWAY_TOKEN=${openclaw_gateway_token}
+          - GOG_KEYRING_PASSWORD=${gog_keyring_password}
+        command: ["gateway", "daemon"]
+    COMPOSE
+
+  # Start gateway
+  - cd /opt/openclaw && docker compose up -d
+
+  # Create systemd service for auto-start on reboot
+  - |
+    cat > /etc/systemd/system/openclaw.service << 'SYSTEMD'
+    [Unit]
+    Description=OpenClaw Gateway
+    After=docker.service
+    Requires=docker.service
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    WorkingDirectory=/opt/openclaw
+    ExecStart=/usr/bin/docker compose up -d
+    ExecStop=/usr/bin/docker compose down
+
+    [Install]
+    WantedBy=multi-user.target
+    SYSTEMD
+  - systemctl daemon-reload
+  - systemctl enable openclaw.service
+
+  # Enable unattended upgrades
+  - dpkg-reconfigure -plow unattended-upgrades
+
+  - echo "OpenClaw deployment complete"

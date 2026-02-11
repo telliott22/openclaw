@@ -1,0 +1,16 @@
+# Hetzner Cloud API token
+# Create one at: https://console.hetzner.cloud → Project → Security → API Tokens
+hcloud_token = "your-hetzner-api-token"
+
+# Your IP address(es) for SSH access
+# Find yours: curl -s https://ifconfig.me
+admin_ip_cidrs = ["1.2.3.4/32"]
+
+# OpenClaw secrets — generate with: openssl rand -hex 32
+openclaw_gateway_token = "generate-me"
+gog_keyring_password   = "generate-me"
+
+# Optional overrides (defaults are fine)
+# server_type         = "cx22"
+# location            = "fsn1"
+# ssh_public_key_path = "~/.ssh/id_ed25519.pub"
