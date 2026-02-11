@@ -22,10 +22,6 @@ variable "location" {
   default     = "nbg1"
 }
 
-variable "admin_ip_cidrs" {
-  description = "CIDR blocks allowed to SSH (your IP)"
-  type        = list(string)
-}
 
 variable "openclaw_gateway_token" {
   description = "Authentication token for OpenClaw gateway"

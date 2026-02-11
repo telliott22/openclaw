@@ -17,19 +17,16 @@ resource "hcloud_ssh_key" "openclaw" {
   public_key = file(pathexpand(var.ssh_public_key_path))
 }
 
-# Firewall: SSH from your IP only, all outbound allowed
+# Firewall: SSH open (key-auth only), all outbound allowed
 resource "hcloud_firewall" "openclaw" {
   name = "openclaw"
 
-  # SSH inbound from admin IPs only
-  dynamic "rule" {
-    for_each = var.admin_ip_cidrs
-    content {
-      direction  = "in"
-      protocol   = "tcp"
-      port       = "22"
-      source_ips = [rule.value]
-    }
+  # SSH inbound (key-auth only, no password)
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "22"
+    source_ips = ["0.0.0.0/0", "::/0"]
   }
 
   # All outbound (LLM API calls, Docker pulls, apt)
@@ -69,4 +66,10 @@ resource "hcloud_server" "openclaw" {
     openclaw_gateway_token = var.openclaw_gateway_token
     gog_keyring_password   = var.gog_keyring_password
   })
+
+  # CRITICAL: Never recreate the server for cloud-init changes.
+  # cloud-init only runs on first boot anyway.
+  lifecycle {
+    ignore_changes = [user_data]
+  }
 }
